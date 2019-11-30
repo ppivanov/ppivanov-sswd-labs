@@ -1,0 +1,15 @@
+#categoriesWrapper{
+    width: 30%;
+    float:left;
+}
+
+#categoriesWrapper.tr{
+    display: block;
+    float:left;
+}
+
+#productsWrapper{
+    width: 65%;
+    float: right;
+}
+

@@ -1,0 +1,19 @@
+{
+    "connection":{
+        "user" : "webUser",
+        "password": "Password@12345",
+        "server" : "sswd-db.database.windows.net",
+        "database" : "SSWD-DB",
+        "parseJSON": true,
+        "options":
+        {
+            "encrypt" : true
+        },
+        "pool":
+        {
+        "min": 2,
+        "max": 4,
+        "idleTimeoutMillis": 30000
+        }
+    }
+}

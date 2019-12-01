@@ -3,7 +3,10 @@ const express = require('express');
 const bodyParser = require('body-parser');
 
 const HOST = '0.0.0.0';
-const PORT = 8080;
+const PORT = 8000;
+
+//load passport middleware config
+require('./security/passportConfig');
 
 // app is a new instance of express (the web app framework)
 let app = express();
@@ -15,7 +18,7 @@ app.use((req, res, next) => {
     res.setHeader("Access-Control-Allow-Origin", "*");
     res.setHeader("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
     next();
-}); 
+});
 
 
 // Allow app to support differnt body content types (using the bidyParser package)
@@ -31,12 +34,15 @@ app.use(bodyParser.urlencoded({ extended: true })); // support url encoded bodie
 // app.options('*', cors()) // include before other routes
 
 /* Configure app Routes to handle requests from browser */
-// The home page 
+// The home page
 app.use('/', require('./routes/index'));
 
-app.use('/product', require('./routes/product'));
+app.use('/user', require('./routes/user'));
 
-app.use('/category', require('./routes/category'));
+app.use('/login', require('./routes/login'));
+// app.use('/product', require('./routes/product'));
+//
+// app.use('/category', require('./routes/category'));
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {

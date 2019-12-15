@@ -105,33 +105,25 @@ router.get(['/:id','/posts/:id'],  async (req, res) => {
 
 // Upload a new forum post using POST
 //insert a new product using POST
-router.post("/", async (req, res) => {
+router.post("/post/upload/", async (req, res) => {
 	
 	//validation - this string will hold any errors that occur.
     let errors = "";
     
 	// Asserting that the user id is a number
-	try{
-		const userId = req.body.user_id;
-		if(!validator.isNumeric(userId, {no_symbols: true})){
-			errors += "Invalid user id\n";
-		}
-		console.log("Passed User ID check");
-	} catch(err){
-		console.log("Problem with entered user_id");
+	const userId = req.body.user_id;
+	console.log("USER ID " + userId + " -TYPE: " + typeof userId);
+	if(!validator.isNumeric(userId)){
+		errors += "Invalid user id\n";
 	}
+	console.log("Passed User ID check");
 	
-	try{
-		//escape text and potential bad characters using validator's 'escape' function
-		const postBody = validator.escape(req.body.post_body);
-		if(postBody === ""){
-			errors += "Invalid post body\n";
-			console.log("Invalid post body\n");
-		}
-	} catch{
-		console.log("Problem with entered post body\n");
+	//escape text and potential bad characters using validator's 'escape' function
+	const postBody = validator.escape(req.body.post_body);
+	if(postBody === ""){
+		errors += "Invalid post body\n";
+		console.log("Invalid post body\n");
 	}
-    
 
 	// function that will pad numbers to two digits	 
 	function twoDigits(d) {

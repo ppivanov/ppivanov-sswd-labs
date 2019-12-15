@@ -6,6 +6,9 @@ const cors = require('cors')
 const HOST = 'localhost';
 const PORT = 8000;
 
+// load passport middleware config
+require('./security/passportConfig');
+
 // app is a new instance of express (the web app framework)
 let app = express();
 
@@ -31,6 +34,10 @@ app.options('*', cors()) // include before other routes
 /* Configure app Routes to handle requests from browser */
 // The home page
 app.use('/', require('./routes/index'));
+
+app.use('/user', require('./routes/user'));
+
+app.use('/login', require('./routes/login'));
 
 // app.use("/product", require("./routes/product"));
 

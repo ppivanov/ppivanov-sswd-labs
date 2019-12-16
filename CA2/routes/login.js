@@ -50,4 +50,19 @@ router.post('/auth', (req, res) => {
     (req, res);
 });
 
+//logout
+router.get('/logout', async (req, res) => {
+
+    try {
+        // clear the JWT token from the cookie and send
+        res.clearCookie('jwt', {path: '/'});
+        return res.status(200).send({"message": "Logged out"});
+    
+        // Catch and send errors  
+    } catch (err) {
+        res.status(500)
+        res.send(err.message)
+    }
+});
+
 module.exports = router;

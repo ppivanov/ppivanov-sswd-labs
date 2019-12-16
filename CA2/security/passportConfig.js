@@ -1,75 +1,80 @@
-// Authentication middleware
-// Local strategy: find the username in the DB and assert passwords are matching
-// JWT strategy: extract JWT from HTTP authorisation header and verify signature
+// Passport Access Control Middlewares
+// LocalStrategy: finds username in the DB and verifies password
+// JWTStrategy: Extracts JWT from HTTP authorization header (bearer token) and verifies its signature
 
-// dependencies
-const passport = require("passport");
-const localStrat = require("passport-local").Strategy;
-const passportJWT = require("passport-jwt");
-const extractJWT = require("passport-jwt").ExtractJwt;
-const JWTStrat = passportJWT.Strategy;
-const bcrypt = require("bcryptjs");
+// Import dependencies
+const passport = require('passport');
+const LocalStrategy = require('passport-local').Strategy;
+const passportJWT = require('passport-jwt');
+const ExtractJwt = require('passport-jwt').ExtractJwt;
+const JWTStrategy = passportJWT.Strategy;
+const bcrypt = require('bcryptjs');
 
-// import database connection and MySQL
-const {sql, dbConnPoolPromise} = require("../database/db.js");
+// require the database connection
+const { sql, dbConnPoolPromise } = require('../database/db.js');
 
-// require config package to manage configuration
-const config = require("config");
+// config package used to manage configuration options
+const config = require('config');
 
-// read secret key from configuration
-const keys = config.get("keys");
+// Read secret key from config
+const keys = config.get('keys');
 
+// Function to get user
+// Consider putting this in a seperate user service
 const getUser = async (username) => {
-    try{
-        // query that will retrieve the user's data
-        const SQL_GET_USER_BY_EMAIL = "select * from dbo.Netizen where email = @email for json path, without array wrapper;";
-        
-        //get a db connection to and execute SQL
+
+    try {
+        const SQL_GET_USER_BY_EMAIL = "SELECT * FROM dbo.Netizen WHERE email = @email for json path, without_array_wrapper;";        // Get a DB connection and execute SQL
         const pool = await dbConnPoolPromise
         const result = await pool.request()
-            .input("email", sql.NVarChar, username)
+            // set name parameter(s) in query
+            .input('email', sql.NVarChar, username)
+            // execute query
             .query(SQL_GET_USER_BY_EMAIL);
-        console.log("Result == " + result);
+
         return (result.recordset[0]);
+    // Catch and send errors  
     } catch (err) {
-        res.status(500);
-        res.send(err.message);
+        res.status(500)
+        res.send(err.message)
     }
 }
 
-// Local strat middleware
-passport.use(new localStrat({
-        // the following values are passed via HTTP
-        usernameField: 'username',
-        passwordField: 'password'
-    }, async (username, password, done) => {
-        try{
-            // retrieving the user
-            const user = await getUser(username);
-            // check if the hash sum of the passwords matches
-            const passwordsMatch = await bcrypt.compare(password, user.password);
+// The local strategy middleware
+passport.use(new LocalStrategy({
 
-            if (passwordsMatch) {
-                return done(null, user, { message: 'Logged In Successfully' });
-            } else {
-                return done(null, false, { message: 'Incorrect Username / Password' });
-            }
-        } catch (err) {
-            done(err);
-        }
-    }
-));
+  // These values are passsed via HTTP 
+  usernameField: 'username',
+  passwordField: 'password',
+},async (username, password, done) => {
+  try {
+    const user = await getUser(username);
 
-// JWT strat middleware
-passport.use(new JWTStrat({
-        jwtFromRequest: extractJWT.fromAuthHeaderAsBearerToken(),
-        secretOrKey: keys.secret
-    }, (jwtPayload, done) => {
-        console.log(`jwt: ${jwtPayload.username}`);
-        // check if jwt token has expired
-        if(parseInt(Date.now())>parseInt(jwtPayload.expires)) {
-           return done("jwt expired");
-        }
-        return done(null, jwtPayload);
+    // this example uses plain text but better to use hashed passwords - 
+    // const passwordsMatch = await bcrypt.compare(password, user.Password);
+    if (user.password === password) {
+      return done(null, user, { message: 'Logged In Successfully' });
+    } else {
+      return done(null, false, { message: 'Incorrect Username / Password' });
     }
+  } catch (error) {
+    done(error);
+  }
+}));
+
+// JWT strategy middleware
+passport.use(new JWTStrategy({
+    //jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
+    jwtFromRequest: req => req.cookies.jwt,
+    secretOrKey: keys.secret
+  },
+  (jwtPayload, done) => {
+    console.log(`jwt: ${jwtPayload.username}`);
+    // Check if JWT has expired 
+    if (parseInt(Date.now()) > parseInt(jwtPayload.expires)) {
+      return done('jwt expired');
+    } else {
+    return done(null, jwtPayload);
+    }
+  }
 ));

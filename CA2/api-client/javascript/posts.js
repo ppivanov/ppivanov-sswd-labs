@@ -13,10 +13,14 @@ function displayPostsAndComments(postsAndComments){
                             <div class="comment-box">
                                 <div class="comment-head">
                                     <h6 class="comment-name by-author"><a href="#" onclick="selectPost(${postAndComment.post.post_id})">${postAndComment.post.first_name}</a></h6>
-                                    <span>${postAndComment.post.upload_time.replace('T', ' ').substring(0, 19)}</span>
-                                    <i class="fa fa-reply"></i>
-                                    <i class="fa fa-heart"></i>
-                                </div>
+                                    <span>${postAndComment.post.upload_time.replace('T', ' ').substring(0, 19)}</span>`;
+        if(userLoggedIn()) {
+            thread +=               `<i class="fa fa-reply" type="button" class="btn btn-primary" data-toggle="modal" data-target="#UploadCommentDialog" onclick="updatePostIdValueInCommentModal(${postAndComment.post.post_id}, '')">Reply</i>`;
+        }
+        if(userIsAuthor(postAndComment.post.user_id)) {
+            thread += `<i class="fa fa-reply" onclick="updatePostIdValueInPostModal(${postAndComment.post.post_id}, -1, '${postAndComment.post.post_body}');" type="button" class="btn btn-primary" data-toggle="modal" data-target="#UploadPostDialog">Update</i>`;
+        }
+        thread +=               `</div>
                                 <div class="comment-content">
                                     ${postAndComment.post.post_body}
                                 </div>
@@ -33,10 +37,11 @@ function displayPostsAndComments(postsAndComments){
                                 <div class="comment-box">
                                     <div class="comment-head">
                                         <h6 class="comment-name"><a href="#">${reply.first_name}</a></h6>
-                                        <span>${reply.upload_time.replace('T', ' ').substring(0, 19)}</span>
-                                        <i class="fa fa-reply"></i>
-                                        <i class="fa fa-heart"></i>
-                                    </div>
+                                        <span>${reply.upload_time.replace('T', ' ').substring(0, 19)}</span>`
+            if(userIsAuthor(reply.user_id)) {
+                thread += `<i class="fa fa-reply" onclick="updatePostIdValueInCommentModal(${postAndComment.post.post_id}, ${reply.comment_id}, '${reply.comment_body}');" type="button" class="btn btn-primary" data-toggle="modal" data-target="#UploadCommentDialog">Update</i>`;
+            } 
+            thread += `</div>
                                     <div class="comment-content">
                                         ${reply.comment_body}
                                     </div>
@@ -128,5 +133,158 @@ async function selectPost(id){
     }  // catch and display any errors to the console
     catch (err) {
       console.log(err);
+    }
+}
+
+async function addOrUpdatePost() {
+    let url = `${BASE_URL}posts`;
+  
+    // Get form fields
+    const postId = Number(document.getElementById('postId').value);
+    const postBody = document.getElementById('postBody').value;
+    const userId = sessionStorage.userId;
+    
+    // only allow post upload if the user is logged in
+    if(userLoggedIn()){
+        // build request body
+        const reqBody = JSON.stringify({
+            user_id: userId,
+            post_body: postBody
+        });
+
+        // Try catch 
+        try {
+            let json = "";
+            // determine if this is an insert (POST) or update (PUT)
+            // update will include product id
+            if (postId > 0) {
+                url += `/${postId}/update-post`;
+                json = await postOrPutDataAsync(url, reqBody, 'PUT');
+            }
+            else {  
+                url += `/upload`;
+                json = await postOrPutDataAsync(url, reqBody, 'POST');
+            }
+            // Load products
+            loadPosts();
+        // catch and log any errors
+        } catch (err) {
+            console.log(err);
+            return err;
+        }
+    } else {
+        // display a popup box
+        alert("Please log in first!");
+    }
+}
+
+async function addOrUpdateComment() {
+    let url = `${BASE_URL}posts`;
+  
+    // Get form fields
+    const commentId = Number(document.getElementById('commentId').value)
+    const postId = Number(document.getElementById('postIdForReply').value);
+    const commentBody = document.getElementById('commentBody').value;
+    const userId = sessionStorage.userId;
+    
+    // only allow post upload if the user is logged in
+    if(userLoggedIn()){
+        // build request body
+        const reqBody = JSON.stringify({
+            user_id: userId,
+            comment_body: commentBody
+        });
+
+        // Try catch 
+        try {
+            let json = "";
+            // determine if this is an insert (POST) or update (PUT)
+            // update will include product id
+            if (commentId > 0) {
+                url +=`/${postId}/update-reply/${commentId}`;
+                json = await postOrPutDataAsync(url, reqBody, 'PUT');
+            }
+            else {  
+                url += `/${postId}/reply`;
+                json = await postOrPutDataAsync(url, reqBody, 'POST');
+            }
+            // Load products
+            loadPosts();
+        // catch and log any errors
+        } catch (err) {
+            console.log(err);
+            return err;
+        }
+    } else {
+        // display a popup box
+        alert("Please log in first!");
+    }
+}
+
+async function deletePost(id) {
+    if(userIsAdmin()){
+        if(confirm("Do you want to permanently delete this post?")){
+            const url = `${BASE_URL}posts/${id}/delete-post}`
+            try{
+                const json = await deleteDataAsync(url);
+
+                console.log("delete post response: " + json);
+                loadPosts();
+            } catch (err) {
+                console.log(err);
+                return err;
+            }
+        }
+    } else {
+        alert("You are not authorized to perform delete actions!");
+    }
+}
+
+async function deleteComment(id) {
+    if(userIsAdmin()){
+        if(confirm("Do you want to permanently delete this reply?")){
+            const url = `${BASE_URL}posts/delete-reply/${id}`
+            try{
+                const json = await deleteDataAsync(url);
+
+                console.log("delete comment response: " + json);
+                loadPosts();
+            } catch (err) {
+                console.log(err);
+                return err;
+            }
+        }
+    } else {
+        alert("You are not authorized to perform delete actions!");
+    }
+}
+
+// Display add post button only if user is logged in
+function addPostButtonDisplay(){
+    if(userLoggedIn()){
+        document.getElementById("addPostButton").style.display = "block";
+    } else {
+        document.getElementById("addPostButton").style.display = "none";
+    }
+}
+
+function updatePostIdValueInCommentModal(postId, commentId, body) {
+    if(userLoggedIn()){
+        document.getElementById("postIdForReply").value = postId + "";
+        if (commentId > 0) {
+            document.getElementById("commentId").value = commentId + "";
+        }
+        document.getElementById("commentBody").value = body + "";
+
+        console.log("value of post id: " + postId);
+        console.log("value of comment id: " + commentId);
+        console.log("value of body: " + body);
+    }
+}
+
+function updatePostIdValueInPostModal(id, body) {
+    if(userLoggedIn()){
+        document.getElementById("postId").value = id + "";
+        document.getElementById("postBody").value = body + "";
     }
 }

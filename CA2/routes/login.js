@@ -21,15 +21,16 @@ router.post('/auth', (req, res) => {
     // use passport to athenticate (local middleware)
     passport.authenticate( 'local', {session: false}, (error, user, info) => {
             if (error || !user) {
+                console.log("Login failed login.js line 24");
                 res.status(400).json(
-                    {message: info ? info.message: "Login failed",
+                    {message: info ? info.message : 'Login failed',
                         user: user   
                     }
                 );
             }
             //Define JWT contents and including the user id instead of email
             const payload = {
-                username: user.email,
+                username: user.user_id,
                 //set expiry to 30 minutes
                 expires: Date.now() + (1000 * 60 * 30)
             };
@@ -37,13 +38,16 @@ router.post('/auth', (req, res) => {
             //assign payload to req.user
             req.login(payload, { session: false }, (err) => {
                 if (err) {
+                    console.log("Login failed login.js line 42");
                     res.status(400).send({err});
+                    return false;
                 }
                 //generate a signed json web token and return it in the response
                 const token = jwt.sign(JSON.stringify(payload), keys.secret);
 
                 //return user and token
-                res.status(200).send({ "user": user.email, token});
+                console.log("Login successful");
+                res.status(200).send({ "user": user.user_id, "user_role": user.role, token});
             });
         }
     )
@@ -56,10 +60,12 @@ router.get('/logout', async (req, res) => {
     try {
         // clear the JWT token from the cookie and send
         res.clearCookie('jwt', {path: '/'});
+        console.log("Logout successful");        
         return res.status(200).send({"message": "Logged out"});
     
         // Catch and send errors  
     } catch (err) {
+        console.log("Error trying to logout");
         res.status(500)
         res.send(err.message)
     }

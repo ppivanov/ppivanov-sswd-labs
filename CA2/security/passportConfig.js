@@ -24,7 +24,8 @@ const keys = config.get('keys');
 const getUser = async (username) => {
 
     try {
-        const SQL_GET_USER_BY_EMAIL = "SELECT * FROM dbo.Netizen WHERE email = @email for json path, without_array_wrapper;";        // Get a DB connection and execute SQL
+        const SQL_GET_USER_BY_EMAIL = "SELECT * FROM dbo.Netizen WHERE email = @email for json path, without_array_wrapper;";
+        // Get a DB connection and execute SQL
         const pool = await dbConnPoolPromise
         const result = await pool.request()
             // set name parameter(s) in query

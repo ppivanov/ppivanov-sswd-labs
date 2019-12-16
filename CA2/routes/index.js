@@ -8,11 +8,11 @@ let validator = require("validator");
 // import database connection and MySQL
 const {sql, dbConnPoolPromise} = require("../database/db.js");
 // Query to retrieve all posts
-const SQL_SELECT_ALL_POSTS = 'SELECT post_id, post_body, upload_time, dbo.Netizen.first_name FROM dbo.Post INNER JOIN dbo.Netizen ON dbo.Post.user_id = dbo.Netizen.user_id for json path;';
+const SQL_SELECT_ALL_POSTS = 'SELECT post_id, post_body, upload_time, dbo.Netizen.first_name, dbo.Netizen.user_id FROM dbo.Post INNER JOIN dbo.Netizen ON dbo.Post.user_id = dbo.Netizen.user_id for json path;';
 // Query to retrive only one post
-const SQL_SELECT_POST_BY_ID = 'SELECT post_id, post_body, upload_time, dbo.Netizen.first_name FROM dbo.Post INNER JOIN dbo.Netizen ON dbo.Post.user_id = dbo.Netizen.user_id WHERE post_id = @id for json path;';
+const SQL_SELECT_POST_BY_ID = 'SELECT post_id, post_body, upload_time, dbo.Netizen.first_name, dbo.Netizen.user_id FROM dbo.Post INNER JOIN dbo.Netizen ON dbo.Post.user_id = dbo.Netizen.user_id WHERE post_id = @id for json path;';
 // Query to retrieve all comments on a single post
-const SQL_SELECT_POST_COMMENTS = 'SELECT comment_body, upload_time, dbo.Netizen.first_name FROM dbo.Comment INNER JOIN dbo.Netizen ON dbo.Comment.user_id = dbo.Netizen.user_id WHERE post_id = @id for json path;';
+const SQL_SELECT_POST_COMMENTS = 'SELECT comment_body, upload_time, comment_id, dbo.Netizen.first_name, dbo.Netizen.user_id FROM dbo.Comment INNER JOIN dbo.Netizen ON dbo.Comment.user_id = dbo.Netizen.user_id WHERE post_id = @id for json path;';
 // Insert statement to save a new post to the database
 const SQL_INSERT_POST = 'INSERT INTO dbo.Post (user_id, post_body, upload_time) VALUES (@userId, @postBody, @uploadTime); SELECT * FROM dbo.Post WHERE post_id = SCOPE_IDENTITY();';
 // Insert statement to save a new reply to the db
@@ -114,14 +114,14 @@ router.get(['/:id','/posts/:id'],  async (req, res) => {
 });
 
 // Upload a new forum post using POST
-router.post("/post/upload/", async (req, res) => {
+router.post("/posts/upload/", async (req, res) => {
 	
 	//validation - this string will hold any errors that occur.
     let errors = "";
     
 	// Asserting that the user id is a number
 	const userId = req.body.user_id;
-	console.log("USER ID " + userId + " -TYPE: " + typeof userId);
+	// console.log("USER ID " + userId + " -TYPE: " + typeof userId);
 	if(!validator.isNumeric(userId)){
 		errors += "Invalid user id\n";
 	}
@@ -189,7 +189,7 @@ router.post("/posts/:id/reply/", async (req, res) => {
 	const commentBody = validator.escape(req.body.comment_body);
 	if(commentBody === ""){
 		errors += "Invalid post body\n";
-		console.log("Invalid post body\n");
+		// console.log("Invalid post body\n");
 	}
 
 	// converting the current date that JS will retrieve to a s

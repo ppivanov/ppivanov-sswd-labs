@@ -29,6 +29,7 @@ const getUser = async (username) => {
         const result = await pool.request()
             .input("email", sql.NVarChar, username)
             .query(SQL_GET_USER_BY_EMAIL);
+        console.log("Result == " + result);
         return (result.recordset[0]);
     } catch (err) {
         res.status(500); // TODO: Where does variable res come from?
@@ -47,6 +48,12 @@ passport.use(new localStrat({
             const user = await getUser(username);
             // check if the hash sum of the passwords matches
             const passwordsMatch = await bcrypt.compare(password, user.password);
+
+            if (passwordsMatch) {
+                return done(null, user, { message: 'Logged In Successfully' });
+            } else {
+                return done(null, false, { message: 'Incorrect Username / Password' });
+            }
         } catch (err) {
             done(err);
         }

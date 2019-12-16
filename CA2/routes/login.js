@@ -29,7 +29,7 @@ router.post('/auth', (req, res) => {
             }
             //Define JWT contents and including the user id instead of email
             const payload = {
-                username: user.user_id,
+                username: user.email,
                 //set expiry to 30 minutes
                 expires: Date.now() + (1000 * 60 * 30)
             };

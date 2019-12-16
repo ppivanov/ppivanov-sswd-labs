@@ -20,10 +20,10 @@ const { sql, dbConnPoolPromise } = require('../database/db.js');
 // Input parameters are parsed and set before queries are executed
 
 // for json path - Tell MS SQL to return results as JSON 
-const SQL_SELECT_ALL = 'SELECT * FROM dbo.AppUser for json path;';
+const SQL_SELECT_ALL = 'SELECT * FROM dbo.Netizen for json path;';
 
 // for json path, without_array_wrapper - use for single json result
-const SQL_SELECT_BY_ID = 'SELECT * FROM dbo.AppUser WHERE UserId = @id for json path, without_array_wrapper;';
+const SQL_SELECT_BY_ID = 'SELECT * FROM dbo.Netizen WHERE user_id = @id for json path, without_array_wrapper;';
 
 
 

@@ -32,7 +32,7 @@ const getUser = async (username) => {
         console.log("Result == " + result);
         return (result.recordset[0]);
     } catch (err) {
-        res.status(500); // TODO: Where does variable res come from?
+        res.status(500);
         res.send(err.message);
     }
 }

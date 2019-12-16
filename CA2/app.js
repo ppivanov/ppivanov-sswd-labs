@@ -58,4 +58,3 @@ var server = app.listen(PORT, HOST, function() {
 module.exports = app;
 
 // TODO: Do documentation of endpoints and DB / requirements - see CA instructions
-// TODO: Allow adding posts and comments

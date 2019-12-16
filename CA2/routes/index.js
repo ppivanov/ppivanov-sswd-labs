@@ -4,25 +4,29 @@ const router = require('express').Router();
 //input validator (package)
 let validator = require("validator");
 
+/******************** SQL QUERIES ********************/
 // import database connection and MySQL
 const {sql, dbConnPoolPromise} = require("../database/db.js");
-
 // Query to retrieve all posts
 const SQL_SELECT_ALL_POSTS = 'SELECT post_id, post_body, upload_time, dbo.Netizen.first_name FROM dbo.Post INNER JOIN dbo.Netizen ON dbo.Post.user_id = dbo.Netizen.user_id for json path;';
-//Query to retrive only one post
+// Query to retrive only one post
 const SQL_SELECT_POST_BY_ID = 'SELECT post_id, post_body, upload_time, dbo.Netizen.first_name FROM dbo.Post INNER JOIN dbo.Netizen ON dbo.Post.user_id = dbo.Netizen.user_id WHERE post_id = @id for json path;';
-
-// Query to retrieve all comments
+// Query to retrieve all comments on a single post
 const SQL_SELECT_POST_COMMENTS = 'SELECT comment_body, upload_time, dbo.Netizen.first_name FROM dbo.Comment INNER JOIN dbo.Netizen ON dbo.Comment.user_id = dbo.Netizen.user_id WHERE post_id = @id for json path;';
-
 // Insert statement to save a new post to the database
 const SQL_INSERT_POST = 'INSERT INTO dbo.Post (user_id, post_body, upload_time) VALUES (@userId, @postBody, @uploadTime); SELECT * FROM dbo.Post WHERE post_id = SCOPE_IDENTITY();';
-
 // Insert statement to save a new reply to the db
 const SQL_INSERT_REPLY = 'INSERT INTO dbo.Comment (post_id, user_id, comment_body, upload_time) VALUES (@postId, @userId, @commentBody, @uploadTime); SELECT * FROM dbo.Post WHERE post_id = SCOPE_IDENTITY();';
-
 // Update statement to update an existing post
-const SQL_UPDATE_POST = '';
+const SQL_UPDATE_POST = 'UPDATE dbo.Post SET post_body = @postBody, upload_time = @uploadTime WHERE post_id = @id; SELECT * FROM dbo.Post WHERE post_id = @id;';
+// Update statement to update an existing comment
+const SQL_UPDATE_COMMENT = 'UPDATE dbo.Comment SET comment_body = @commentBody, upload_time = @uploadTime WHERE comment_id = @commentId; SELECT * FROM dbo.Post WHERE post_id = @postId;';
+// Delete statement to delete a post from the DB -> deleting all replies first, then deleting the post
+const SQL_DELETE_POST = 'DELETE FROM dbo.Comment WHERE post_id = @postId; DELETE FROM dbo.Post WHERE post_id = @postId;'
+// Delete statement to delete a single comment from the DB
+const SQL_DELETE_COMMENT = 'DELETE FROM dbo.Comment WHERE comment_id = @commentId;'
+
+/******************** END OF SQL QUERIES ********************/
 
 // Handle get requests for '/', '/home', '/index' and '/posts'
 router.get(['/', '/index', '/home', '/posts'],  async (req, res) => {
@@ -206,7 +210,8 @@ router.post("/posts/:id/reply/", async (req, res) => {
 			.input("postId", sql.Int, postId)
 			.input("userId", sql.Int, userId)
 			.input("commentBody", sql.NVarChar, commentBody)
-			.input("uploadTime", sql.Date, uploadTime) // TODO: Time is not saved in DB
+			// TODO: Time is not saved in DB, only the date is
+			.input("uploadTime", sql.Date, uploadTime)
 			.query(SQL_INSERT_REPLY);
 		res.json(result.recordset[0]);
 	} catch (err) {
@@ -216,8 +221,8 @@ router.post("/posts/:id/reply/", async (req, res) => {
 });
 
 //TODO: Check if user trying to update or delete is the author of the post
-// update a post using POST
-router.put("/posts/update/:id", async (req, res) => {
+// update a post using PUT
+router.put("/posts/:id/update-post", async (req, res) => {
 	
 	//validation - this string will hold any errors that occur.
 	let errors = "";
@@ -231,6 +236,54 @@ router.put("/posts/update/:id", async (req, res) => {
 	if(postBody === ""){
 		errors += "Invalid post body\n";
 	}
+
+	const uploadTime = new Date().toISOString().slice(0, 19).replace('T', ' ');
+
+	//if there are any errors send the details in the response
+	if(errors != ""){
+		res.json({"errors": errors});
+		return false;
+	}
+	//if no errors, then insert
+	try{
+		const pool = await dbConnPoolPromise
+		const result = await pool.request()
+			//set name parameter(s) in query
+			.input("id", sql.Int, postId)
+			.input("postBody", sql.NVarChar, postBody)
+			.input("uploadTime", sql.Date, uploadTime)
+			.query(SQL_UPDATE_POST);
+		// if successful then return updated post via http
+		res.json(result.recordset[0]);
+	} catch (err) {
+		res.status(500);
+		res.send(err.message)
+	}
+});
+
+
+// update a reply using PUT
+router.put("/posts/:postId/update-reply/:replyId", async (req, res) => {
+	
+	//validation - this string will hold any errors that occur.
+	let errors = "";
+
+	//reading the post and reply ids from the request
+	const postId = req.params.postId;
+	if(!validator.isNumeric(postId, {no_symbols: true})){
+		errors += "Invalid psot id\n";
+	}
+	const replyId = req.params.replyId;
+	if(!validator.isNumeric(replyId, {no_symbols: true})){
+		errors += "Invalid reply id\n";
+	}
+	const commentBody = validator.escape(req.body.comment_body);
+	if(commentBody === ""){
+		errors += "Invalid post body\n";
+	}
+
+	const uploadTime = new Date().toISOString().slice(0, 19).replace('T', ' ');
+
 	//if there are any errors send the details in the response
 	if(errors != ""){
 		res.json({"errors": errors});
@@ -242,10 +295,70 @@ router.put("/posts/update/:id", async (req, res) => {
 		const result = await pool.request()
 			//set name parameter(s) in query
 			.input("postId", sql.Int, postId)
-			.input("postBody", sql.NVarChar, postBody)
-			.query(SQL_UPDATE_POST);
+			.input("commentId", sql.Int, replyId)
+			.input("commentBody", sql.NVarChar, commentBody)
+			.input("uploadTime", sql.Date, uploadTime)
+			.query(SQL_UPDATE_COMMENT);
 		// if successful then return updated post via http
 		res.json(result.recordset[0]);
+	} catch (err) {
+		res.status(500);
+		res.send(err.message)
+	}
+});
+
+// Delete a post using DELETE method
+// Deletes all comments first and then deletes the post -> to remove any pk-fk relationships
+router.delete('/posts/:id/delete-post', async (req, res) => {
+
+	// Get the post id from the url
+	const postId = req.params.id;
+	if(!validator.isNumeric(postId, {no_symbols: true})){
+		res.json({ "error": "invalid id parameter" });
+        return false;
+	}
+
+	try {
+		const pool = await dbConnPoolPromise
+		const result = await pool.request()
+			//set name parameter(s) in query
+			.input("postId", sql.Int, postId)
+			.query(SQL_DELETE_POST);
+
+		// First query deletes the comments if any, so rowsAffected[0] can be only >= 0
+		// Second query deletes the post, so if rowsAffected[1] is > 0, then the post is deleted
+		const rowsAffected = Number(result.rowsAffected[1]);
+		let response = rowsAffected > 0 ? {"deleted_id": postId} : {"deleted_id": null}
+
+		res.json(response);
+
+	} catch (err) {
+		res.status(500);
+		res.send(err.message)
+	}
+});
+
+// Delete a comment using DELETE method
+router.delete('/posts/delete-reply/:id', async (req, res) => {
+
+	// Get the post id from the url
+	const commentId = req.params.id;
+	if(!validator.isNumeric(commentId, {no_symbols: true})){
+		res.json({ "error": "invalid id parameter" });
+        return false;
+	}
+
+	try {
+		const pool = await dbConnPoolPromise
+		const result = await pool.request()
+			//set name parameter(s) in query
+			.input("commentId", sql.Int, commentId)
+			.query(SQL_DELETE_COMMENT);
+
+		const rowsAffected = Number(result.rowsAffected);
+		let response = rowsAffected > 0 ? {"deleted_id": commentId} : {"deleted_id": null}
+		res.json(response);
+
 	} catch (err) {
 		res.status(500);
 		res.send(err.message)

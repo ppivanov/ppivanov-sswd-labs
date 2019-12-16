@@ -220,7 +220,6 @@ router.post("/posts/:id/reply/", async (req, res) => {
 	}
 });
 
-//TODO: Check if user trying to update or delete is the author of the post
 // update a post using PUT
 router.put("/posts/:id/update-post", async (req, res) => {
 	

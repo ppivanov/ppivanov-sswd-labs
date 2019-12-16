@@ -15,10 +15,13 @@ function displayPostsAndComments(postsAndComments){
                                     <h6 class="comment-name by-author"><a href="#" onclick="selectPost(${postAndComment.post.post_id})">${postAndComment.post.first_name}</a></h6>
                                     <span>${postAndComment.post.upload_time.replace('T', ' ').substring(0, 19)}</span>`;
         if(userLoggedIn()) {
-            thread +=               `<i class="fa fa-reply" type="button" class="btn btn-primary" data-toggle="modal" data-target="#UploadCommentDialog" onclick="updatePostIdValueInCommentModal(${postAndComment.post.post_id}, '')">Reply</i>`;
+            thread += `<i type="button" class="btn btn-primary btn-sm" data-toggle="modal" data-target="#UploadCommentDialog" onclick="updatePostIdValueInCommentModal(${postAndComment.post.post_id}, '')">Reply</i>`;
         }
         if(userIsAuthor(postAndComment.post.user_id)) {
-            thread += `<i class="fa fa-reply" onclick="updatePostIdValueInPostModal(${postAndComment.post.post_id}, -1, '${postAndComment.post.post_body}');" type="button" class="btn btn-primary" data-toggle="modal" data-target="#UploadPostDialog">Update</i>`;
+            thread += `<i onclick="updatePostIdValueInPostModal(${postAndComment.post.post_id}, -1, '${postAndComment.post.post_body}');" type="button" class="btn btn-primary btn-sm" data-toggle="modal" data-target="#UploadPostDialog">Update</i>`;
+        }
+        if(userIsAdmin() || userIsAuthor(postAndComment.post.user_id)){
+            thread += `<i onclick="deletePost(${postAndComment.post.post_id}, ${postAndComment.post.user_id});" type="button" class="btn btn-danger btn-sm">Delete</i>`;
         }
         thread +=               `</div>
                                 <div class="comment-content">
@@ -39,7 +42,10 @@ function displayPostsAndComments(postsAndComments){
                                         <h6 class="comment-name"><a href="#">${reply.first_name}</a></h6>
                                         <span>${reply.upload_time.replace('T', ' ').substring(0, 19)}</span>`
             if(userIsAuthor(reply.user_id)) {
-                thread += `<i class="fa fa-reply" onclick="updatePostIdValueInCommentModal(${postAndComment.post.post_id}, ${reply.comment_id}, '${reply.comment_body}');" type="button" class="btn btn-primary" data-toggle="modal" data-target="#UploadCommentDialog">Update</i>`;
+                thread += `<i onclick="updatePostIdValueInCommentModal(${postAndComment.post.post_id}, ${reply.comment_id}, '${reply.comment_body}');" type="button" class="btn btn-primary btn-sm" data-toggle="modal" data-target="#UploadCommentDialog">Update</i>`;
+            }
+            if(userIsAdmin() || userIsAuthor(reply.user_id)){
+                thread += `<i onclick="deleteComment(${reply.comment_id}, ${reply.user_id});" type="button" class="btn btn-danger btn-sm">Delete</i>`;
             } 
             thread += `</div>
                                     <div class="comment-content">
@@ -74,8 +80,6 @@ function displaySinglePost(thread){
                                 <div class="comment-head">
                                     <h6 class="comment-name by-author"><a href="#">${thread.post.first_name}</a></h6>
                                     <span>${thread.post.upload_time.replace('T', ' ').substring(0, 19)}</span>
-                                    <i class="fa fa-reply"></i>
-                                    <i class="fa fa-heart"></i>
                                 </div>
                                 <div class="comment-content">
                                     ${thread.post.post_body}
@@ -94,8 +98,6 @@ function displaySinglePost(thread){
                                 <div class="comment-head">
                                     <h6 class="comment-name"><a href="http://creaticode.com/blog">${reply.first_name}</a></h6>
                                     <span>${reply.upload_time.replace('T', ' ').substring(0, 19)}</span>
-                                    <i class="fa fa-reply"></i>
-                                    <i class="fa fa-heart"></i>
                                 </div>
                                 <div class="comment-content">
                                     ${reply.comment_body}
@@ -221,14 +223,15 @@ async function addOrUpdateComment() {
     }
 }
 
-async function deletePost(id) {
-    if(userIsAdmin()){
+async function deletePost(postId, userId) {
+    console.log(postId);
+    if(userIsAdmin() || sessionStorage.userId == userId){
         if(confirm("Do you want to permanently delete this post?")){
-            const url = `${BASE_URL}posts/${id}/delete-post}`
+            const url = `${BASE_URL}posts/${postId}/delete-post`;
             try{
                 const json = await deleteDataAsync(url);
 
-                console.log("delete post response: " + json);
+                // console.log("delete post response: " + json);
                 loadPosts();
             } catch (err) {
                 console.log(err);
@@ -240,14 +243,15 @@ async function deletePost(id) {
     }
 }
 
-async function deleteComment(id) {
-    if(userIsAdmin()){
+async function deleteComment(commentId, userId) {
+    console.log(commentId);
+    if(userIsAdmin() || sessionStorage.userId == userId){
         if(confirm("Do you want to permanently delete this reply?")){
-            const url = `${BASE_URL}posts/delete-reply/${id}`
+            const url = `${BASE_URL}posts/delete-reply/${commentId}`
             try{
                 const json = await deleteDataAsync(url);
 
-                console.log("delete comment response: " + json);
+                // console.log("delete comment response: " + json);
                 loadPosts();
             } catch (err) {
                 console.log(err);

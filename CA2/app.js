@@ -12,6 +12,8 @@ require('./security/passportConfig');
 // app is a new instance of express (the web app framework)
 let app = express();
 
+app.use(express.static('api-client'));
+
 // Application settings
 app.use((req, res, next) => {
     // Globally set Content-Type header for the application

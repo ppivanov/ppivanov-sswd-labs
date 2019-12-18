@@ -118,7 +118,7 @@ function displaySinglePost(thread){
 async function loadPosts() {
     try {
         // calling the function getDataAsync, implemented in fetch.js, that does a JS Fetch to the API endpoint
-        const postsAndComments = await getDataAsync(`${BASE_URL}`);
+        const postsAndComments = await getDataAsync(`${BASE_URL}home`);
         displayPostsAndComments(postsAndComments);
     
     } // catch and log any errors

@@ -22,7 +22,7 @@ async function getDataAsync(url) {
         const json = await response.json();
     
         // Output result to console
-        // console.log(json);
+        console.log(json);
         
         // return the json object
         return json;

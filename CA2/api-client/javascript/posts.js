@@ -39,8 +39,14 @@ function displayPostsAndComments(postsAndComments){
                                 <div class="comment-avatar"><img src="https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fcdn2.iconfinder.com%2Fdata%2Ficons%2Foffice-and-business-special-set-1%2F260%2F18-512.png&f=1&nofb=1" alt=""></div>
                                 <!-- Comment -->
                                 <div class="comment-box">
-                                    <div class="comment-head">
-                                        <h6 class="comment-name"><a href="#">${reply.username}</a></h6>
+                                    <div class="comment-head">`;
+                if(postAndComment.post.user_id == reply.user_id) {
+                    thread += `<h6 class="comment-name by-author">`;
+                } else {
+                    thread += `<h6 class="comment-name">`;
+                }
+                thread +=                   `${reply.username}
+                                        </h6>
                                         <span>${reply.upload_time.replace('T', ' ').substring(0, 19)}</span>`
             if(userIsAuthor(reply.user_id)) {
                 thread += `<i onclick="updatePostIdValueInCommentModal(${postAndComment.post.post_id}, ${reply.comment_id}, '${reply.comment_body}');" type="button" class="btn btn-primary btn-sm" data-toggle="modal" data-target="#UploadCommentDialog">Update</i>`;
@@ -100,6 +106,7 @@ async function addOrUpdatePost() {
   
     // Get form fields
     const postId = Number(document.getElementById('postId').value);
+
     const postBody = document.getElementById('postBody').value;
     const userId = sessionStorage.userId;
     
@@ -124,6 +131,11 @@ async function addOrUpdatePost() {
                 url += `/upload`;
                 json = await postOrPutDataAsync(url, reqBody, 'POST');
             }
+
+            // clear the input fields
+            document.getElementById('postId').value = "";
+            document.getElementById('postBody').value = ""
+
             // Load products
             loadPosts();
         // catch and log any errors
@@ -167,6 +179,12 @@ async function addOrUpdateComment() {
                 url += `/${postId}/reply`;
                 json = await postOrPutDataAsync(url, reqBody, 'POST');
             }
+
+            // clear the input fields
+            document.getElementById('commentId').value = "";
+            document.getElementById('commentBody').value = ""
+            document.getElementById('postIdForReply').value = ""
+
             // Load products
             loadPosts();
         // catch and log any errors
@@ -231,6 +249,14 @@ function addPostButtonDisplay(){
 
 function updatePostIdValueInCommentModal(postId, commentId, body) {
     if(userLoggedIn()){
+
+        let commentDialog = document.getElementById("comment-modal-title");
+        if (commentId > 0) {
+            commentDialog.innerHTML = "Update comment";
+        } else {
+            commentDialog.innerHTML = "Upload comment";
+        }
+
         document.getElementById("postIdForReply").value = postId + "";
         if (commentId > 0) {
             document.getElementById("commentId").value = commentId + "";
@@ -250,6 +276,13 @@ function updatePostIdValueInCommentModal(postId, commentId, body) {
 
 function updatePostIdValueInPostModal(id, body) {
     if(userLoggedIn()){
+
+        let postDialog = document.getElementById("post-modal-title");
+        if (id > 0) {
+            postDialog.innerHTML = "Update post";
+        } else {
+            postDialog.innerHTML = "Upload post";
+        }
         document.getElementById("postId").value = id + "";
         document.getElementById("postBody").value = body + "";
     }

@@ -14,16 +14,8 @@
     min-height: 100vh;
     margin: 0;
     padding: 0;
+    background-color: #283035;
 }
-
-/* html * {
-   background-color: #283035;
-}
-
-body *{
-   background-color: #283035;
-
-} */
 
 * {
    margin: 0;
@@ -43,10 +35,6 @@ body *{
    margin-top: 5vh;
    left: 0;
    top: 0;
- /* left: 50%; */
-   /* width: ; */
-   /* display:block; */
-   /* z-index: -5; */
    background-color: #283035;
 }
 
@@ -231,7 +219,7 @@ body {
    margin-left: 14px;
    position: relative;
    top: 2px;
-   color: #A6A6A6;
+   color: rgb(211, 211, 211);
    cursor: pointer;
    -webkit-transition: color 0.3s ease;
    -o-transition: color 0.3s ease;

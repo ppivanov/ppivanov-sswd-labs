@@ -125,7 +125,6 @@ router.post("/posts/upload/", passport.authenticate('jwt', { session: false}), a
     
 	// Asserting that the user id is a number
 	const userId = req.body.user_id;
-	// console.log("USER ID " + userId + " -TYPE: " + typeof userId);
 	if(!validator.isNumeric(userId)){
 		errors += "Invalid user id\n";
 	}
@@ -143,7 +142,7 @@ router.post("/posts/upload/", passport.authenticate('jwt', { session: false}), a
 		if(-10 < d && d < 0) return "-0" + (-1*d).toString();
 		return d.toString();
 	}
-	// converting the current date that JS will retrieve to a s
+	// converting the current date that JS will retrieve to an acceptable SQL date format.
 	const postTime = new Date().toISOString().slice(0, 19);
 	console.log(postTime);
 
@@ -153,14 +152,14 @@ router.post("/posts/upload/", passport.authenticate('jwt', { session: false}), a
 		
 		return false;
 	}
-	//if no errors, then insert
+	// if there are no errors, then insert
 	try{
 		const pool = await dbConnPoolPromise
 		const result = await pool.request()
 			//set name parameter(s) in query
 			.input("userId", sql.Int, userId)
 			.input("postBody", sql.NVarChar, postBody)
-			.input("uploadTime", sql.Date, postTime)
+			.input("uploadTime", sql.Date, postTime) // Does not insert the time for some reason.
 			.query(SQL_INSERT_POST);
 		//if successful then return inserted post via http
 		res.json(result.recordset[0]);
@@ -172,10 +171,10 @@ router.post("/posts/upload/", passport.authenticate('jwt', { session: false}), a
 
 router.post("/posts/:id/reply/", passport.authenticate('jwt', { session: false}), async (req, res) => {
 	
-	//validation - this string will hold any errors that occur.
+	// validation - this string will hold any errors that occur.
 	let errors = "";
 
-	//retrieving the post id from teh
+	// retrieving the post id from the parameter passed in the URL
 	const postId = req.params.id;
 	// Making sure the parameter is numeric to prevent a crash or a security breach
 	if(!validator.isNumeric(postId, {no_symbols: true})){

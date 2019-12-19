@@ -57,7 +57,8 @@ router.get('/all', passport.authenticate('jwt', { session: false}), async (req, 
 // Address http://server:port/product/:id
 // returns JSON
 router.get('/:id', passport.authenticate('jwt', { session: false}), async (req, res) => {
-
+  if(sessionStorage.userRole == 'admin'){
+   
   // read value of id parameter from the request url
   const userId = req.params.id;
 
@@ -89,6 +90,7 @@ router.get('/:id', passport.authenticate('jwt', { session: false}), async (req, 
     res.status(500)
     res.send(err.message)
   }
+}
 });
 
 module.exports = router;

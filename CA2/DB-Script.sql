@@ -17,8 +17,7 @@ GO
 --I am trying to avoid using the same names as in the labs
 CREATE TABLE [dbo].[Netizen]( 
 	[user_id] [int] IDENTITY(1,1) NOT NULL,
-	[first_name] [nvarchar](255) NOT NULL,
-	[last_name] [nvarchar](255) NULL,
+	[username] [nvarchar](255) NULL,
 	[email] [nvarchar](255) NOT NULL,
 	[password] [nvarchar](255) NOT NULL,
 	[role] [nvarchar](7) NOT NULL,
@@ -64,11 +63,11 @@ GO
 
 SET IDENTITY_INSERT [dbo].[Netizen] ON 
 GO
-INSERT [dbo].[Netizen] ([user_id], [first_name], [last_name], [email], [password], [role]) VALUES (1, N'Alice', N'Alice', N'alice@sswd.com', N'password', N'user')
+INSERT [dbo].[Netizen] ([user_id], [username], [email], [password], [role]) VALUES (1, N'Alice', N'alice@sswd.com', N'password', N'user')
 GO
-INSERT [dbo].[Netizen] ([user_id], [first_name], [last_name], [email], [password], [role]) VALUES (2, N'Bob', N'BobFather', N'bob@sswd.com', N'password', N'user')
+INSERT [dbo].[Netizen] ([user_id], [username], [email], [password], [role]) VALUES (2, N'Bob', N'bob@sswd.com', N'password', N'user')
 GO
-INSERT [dbo].[Netizen] ([user_id], [first_name], [last_name], [email], [password], [role]) VALUES (3, N'BigBrother', N'IsWatching', N'bb@sswd.com', N'password', N'admin')
+INSERT [dbo].[Netizen] ([user_id], [username], [email], [password], [role]) VALUES (3, N'BigBrother', N'bb@sswd.com', N'password', N'admin')
 GO
 SET IDENTITY_INSERT [dbo].[Netizen] OFF
 GO

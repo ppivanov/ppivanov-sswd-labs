@@ -8,7 +8,7 @@ const LocalStrategy = require('passport-local').Strategy;
 const passportJWT = require('passport-jwt');
 const ExtractJwt = require('passport-jwt').ExtractJwt;
 const JWTStrategy = passportJWT.Strategy;
-const bcrypt = require('bcryptjs');
+// const bcrypt = require('bcryptjs');
 
 // require the database connection
 const { sql, dbConnPoolPromise } = require('../database/db.js');
@@ -47,7 +47,7 @@ passport.use(new LocalStrategy({
   // These values are passsed via HTTP 
   usernameField: 'username',
   passwordField: 'password',
-},async (username, password, done) => {
+}, async (username, password, done) => {
   try {
     const user = await getUser(username);
 
@@ -65,17 +65,17 @@ passport.use(new LocalStrategy({
 
 // JWT strategy middleware
 passport.use(new JWTStrategy({
-    //jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
+    // jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
     jwtFromRequest: req => req.cookies.jwt,
     secretOrKey: keys.secret
-  },
-  (jwtPayload, done) => {
+  }, (jwtPayload, done) => {
     console.log(`jwt: ${jwtPayload.username}`);
+
     // Check if JWT has expired 
     if (parseInt(Date.now()) > parseInt(jwtPayload.expires)) {
       return done('jwt expired');
     } else {
-    return done(null, jwtPayload);
+      return done(null, jwtPayload);
     }
   }
 ));

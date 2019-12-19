@@ -2,6 +2,8 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors')
+const cookieParser = require('cookie-parser');
+
 
 const HOST = 'localhost';
 const PORT = 8000;
@@ -20,6 +22,8 @@ app.use((req, res, next) => {
     res.setHeader("Content-Type", "application/json");
     next();
 });
+
+app.use(cookieParser());
 
 // Allow app to support differnt body content types (using the bidyParser package)
 app.use(bodyParser.text());

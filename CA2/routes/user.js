@@ -27,13 +27,13 @@ const SQL_SELECT_BY_ID = 'SELECT * FROM dbo.Netizen WHERE user_id = @id for json
 
 
 
+
 // GET listing of all users
 // Address http://server:port/user
 // returns JSON
 // Protected by Passport jwt check
 // This will call the jwt middleware defined in passportConfig.js
-router.get('/', passport.authenticate('jwt', { session: false}),
-async (req, res) => {
+router.get('/all', passport.authenticate('jwt', { session: false}), async (req, res) => {
 
   // Get a DB connection and execute SQL
   try {
@@ -44,12 +44,13 @@ async (req, res) => {
 
     // Send HTTP response.
     // JSON data from MS SQL is contained in first element of the recordset.
+    // console.log("RESULT + " + JSON.stringify(result.recordset[0]));
     res.json(result.recordset[0]);
 
     // Catch and send errors  
   } catch (err) {
     res.status(500)
-    res.send(err.message)
+    res.send("USER/ALL" + err.message)
   }
 });
 
@@ -57,8 +58,7 @@ async (req, res) => {
 // id passed as parameter via url
 // Address http://server:port/product/:id
 // returns JSON
-router.get('/:id', passport.authenticate('jwt', { session: false}),
-async (req, res) => {
+router.get('/:id', passport.authenticate('jwt', { session: false}), async (req, res) => {
 
   // read value of id parameter from the request url
   const userId = req.params.id;
@@ -83,6 +83,8 @@ async (req, res) => {
       .query(SQL_SELECT_BY_ID);
 
     // Send response with JSON result    
+    // console.log("RESULT + " + JSON.stringify(result.recordset));
+
     res.json(result.recordset)
 
   } catch (err) {

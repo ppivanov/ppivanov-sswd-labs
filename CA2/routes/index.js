@@ -1,6 +1,8 @@
 // Import router package
 const router = require('express').Router();
 
+const passport = require('passport');
+
 //input validator (package)
 let validator = require("validator");
 
@@ -8,11 +10,11 @@ let validator = require("validator");
 // import database connection and MySQL
 const {sql, dbConnPoolPromise} = require("../database/db.js");
 // Query to retrieve all posts
-const SQL_SELECT_ALL_POSTS = 'SELECT post_id, post_body, upload_time, dbo.Netizen.first_name, dbo.Netizen.user_id FROM dbo.Post INNER JOIN dbo.Netizen ON dbo.Post.user_id = dbo.Netizen.user_id for json path;';
+const SQL_SELECT_ALL_POSTS = 'SELECT post_id, post_body, upload_time, dbo.Netizen.username, dbo.Netizen.user_id FROM dbo.Post INNER JOIN dbo.Netizen ON dbo.Post.user_id = dbo.Netizen.user_id for json path;';
 // Query to retrive only one post
-const SQL_SELECT_POST_BY_ID = 'SELECT post_id, post_body, upload_time, dbo.Netizen.first_name, dbo.Netizen.user_id FROM dbo.Post INNER JOIN dbo.Netizen ON dbo.Post.user_id = dbo.Netizen.user_id WHERE post_id = @id for json path;';
+const SQL_SELECT_POST_BY_ID = 'SELECT post_id, post_body, upload_time, dbo.Netizen.username, dbo.Netizen.user_id FROM dbo.Post INNER JOIN dbo.Netizen ON dbo.Post.user_id = dbo.Netizen.user_id WHERE post_id = @id for json path;';
 // Query to retrieve all comments on a single post
-const SQL_SELECT_POST_COMMENTS = 'SELECT comment_body, upload_time, comment_id, dbo.Netizen.first_name, dbo.Netizen.user_id FROM dbo.Comment INNER JOIN dbo.Netizen ON dbo.Comment.user_id = dbo.Netizen.user_id WHERE post_id = @id for json path;';
+const SQL_SELECT_POST_COMMENTS = 'SELECT comment_body, upload_time, comment_id, dbo.Netizen.username, dbo.Netizen.user_id FROM dbo.Comment INNER JOIN dbo.Netizen ON dbo.Comment.user_id = dbo.Netizen.user_id WHERE post_id = @id for json path;';
 // Insert statement to save a new post to the database
 const SQL_INSERT_POST = 'INSERT INTO dbo.Post (user_id, post_body, upload_time) VALUES (@userId, @postBody, @uploadTime); SELECT * FROM dbo.Post WHERE post_id = SCOPE_IDENTITY();';
 // Insert statement to save a new reply to the db
@@ -29,7 +31,7 @@ const SQL_DELETE_COMMENT = 'DELETE FROM dbo.Comment WHERE comment_id = @commentI
 /******************** END OF SQL QUERIES ********************/
 
 // Handle get requests for '/', '/home', '/index' and '/posts'
-router.get(['/', '/index', '/home', '/posts'],  async (req, res) => {
+router.get(['/index', '/home', '/posts'],  async (req, res) => {
     	//get a db connection to and execute SQL
     	try{
     		const pool = await dbConnPoolPromise
@@ -88,6 +90,8 @@ router.get(['/:id','/posts/:id'],  async (req, res) => {
     
     //get a db connection to and execute SQL
     try{
+		
+
 		const pool = await dbConnPoolPromise
 		const post = await pool.request()
 			//set name parameter in query
@@ -101,11 +105,11 @@ router.get(['/:id','/posts/:id'],  async (req, res) => {
 			//execute query
 			.query(SQL_SELECT_POST_COMMENTS);
         
-        const postAndComments = {"post": post.recordset[0][0], "comments": comments.recordset[0]};
+		const postArray = [{"post": post.recordset[0][0], "comments": comments.recordset[0]}];
         // console.log(postAndComments);
 		//send http response
 		//json data from ms sql is contained in first element of the recordset
-		res.json(postAndComments);
+		res.json(postArray);
 	} catch(err) {
 		//catch error and send error code
 		res.status(500);
@@ -114,7 +118,7 @@ router.get(['/:id','/posts/:id'],  async (req, res) => {
 });
 
 // Upload a new forum post using POST
-router.post("/posts/upload/", async (req, res) => {
+router.post("/posts/upload/", passport.authenticate('jwt', { session: false}), async (req, res) => {
 	
 	//validation - this string will hold any errors that occur.
     let errors = "";
@@ -167,7 +171,7 @@ router.post("/posts/upload/", async (req, res) => {
 	}
 });
 
-router.post("/posts/:id/reply/", async (req, res) => {
+router.post("/posts/:id/reply/", passport.authenticate('jwt', { session: false}), async (req, res) => {
 	
 	//validation - this string will hold any errors that occur.
 	let errors = "";
@@ -221,7 +225,7 @@ router.post("/posts/:id/reply/", async (req, res) => {
 });
 
 // update a post using PUT
-router.put("/posts/:id/update-post", async (req, res) => {
+router.put("/posts/:id/update-post", passport.authenticate('jwt', { session: false}), async (req, res) => {
 	
 	//validation - this string will hold any errors that occur.
 	let errors = "";
@@ -262,7 +266,7 @@ router.put("/posts/:id/update-post", async (req, res) => {
 
 
 // update a reply using PUT
-router.put("/posts/:postId/update-reply/:replyId", async (req, res) => {
+router.put("/posts/:postId/update-reply/:replyId", passport.authenticate('jwt', { session: false}), async (req, res) => {
 	
 	//validation - this string will hold any errors that occur.
 	let errors = "";
@@ -308,7 +312,7 @@ router.put("/posts/:postId/update-reply/:replyId", async (req, res) => {
 
 // Delete a post using DELETE method
 // Deletes all comments first and then deletes the post -> to remove any pk-fk relationships
-router.delete('/posts/:id/delete-post', async (req, res) => {
+router.delete('/posts/:id/delete-post', passport.authenticate('jwt', { session: false}), async (req, res) => {
 
 	// Get the post id from the url
 	const postId = req.params.id;
@@ -338,7 +342,7 @@ router.delete('/posts/:id/delete-post', async (req, res) => {
 });
 
 // Delete a comment using DELETE method
-router.delete('/posts/delete-reply/:id', async (req, res) => {
+router.delete('/posts/delete-reply/:id', passport.authenticate('jwt', { session: false}), async (req, res) => {
 
 	// Get the post id from the url
 	const commentId = req.params.id;

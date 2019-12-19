@@ -31,7 +31,7 @@ router.post('/auth', (req, res) => {
             //Define JWT contents and including the user id instead of email
             const payload = {
                 username: user.user_id,
-                //set expiry to 30 minutes
+                // set expiry to 30 minutes
                 expires: Date.now() + (1000 * 60 * 30)
             };
 
@@ -40,16 +40,17 @@ router.post('/auth', (req, res) => {
                 if (err) {
                     console.log("Login failed login.js line 42");
                     res.status(400).send({err});
-                    return false;
                 }
                 //generate a signed json web token and return it in the response
                 const token = jwt.sign(JSON.stringify(payload), keys.secret);
 
+                // add the token to a cookie and send
+                res.cookie('jwt', token, { httpOnly: true, secure: false });
                 //return user and token
                 console.log("Login successful");
                 res.status(200).send({ "user": user.user_id, "user_role": user.role, token});
             });
-        }
+        },
     )
     (req, res);
 });

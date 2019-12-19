@@ -1,8 +1,9 @@
 function displayPostsAndComments(postsAndComments){
     // Using Array's map function to loop through the array of posts (in json format)
-    // Each products will be formated as HTML table rowsand added to the array
+    // Each post will be formated as HTML list item and added to the list
+    console.log(postsAndComments);
     const allPosts = postsAndComments.map(postAndComment => {
-        // after this function has finished execution, 'allPosts' will have all the posts
+        // after this function has finished execution, 'allPosts' will have all the posts // or a single post and all of its comments
         // and their comments formatted in HTML tags, ready to be displayed
 
         let thread = `<li>
@@ -12,13 +13,13 @@ function displayPostsAndComments(postsAndComments){
                             <!-- Comment -->
                             <div class="comment-box">
                                 <div class="comment-head">
-                                    <h6 class="comment-name by-author"><a href="#" onclick="selectPost(${postAndComment.post.post_id})">${postAndComment.post.first_name}</a></h6>
+                                    <h6 class="comment-name by-author"><a href="#" onclick="selectPost(${postAndComment.post.post_id})">${postAndComment.post.username}</a></h6>
                                     <span>${postAndComment.post.upload_time.replace('T', ' ').substring(0, 19)}</span>`;
         if(userLoggedIn()) {
-            thread += `<i type="button" class="btn btn-primary btn-sm" data-toggle="modal" data-target="#UploadCommentDialog" onclick="updatePostIdValueInCommentModal(${postAndComment.post.post_id}, '')">Reply</i>`;
+            thread += `<i type="button" class="btn btn-primary btn-sm" data-toggle="modal" data-target="#UploadCommentDialog" onclick="updatePostIdValueInCommentModal(${postAndComment.post.post_id}, -1, '')">Reply</i>`;
         }
         if(userIsAuthor(postAndComment.post.user_id)) {
-            thread += `<i onclick="updatePostIdValueInPostModal(${postAndComment.post.post_id}, -1, '${postAndComment.post.post_body}');" type="button" class="btn btn-primary btn-sm" data-toggle="modal" data-target="#UploadPostDialog">Update</i>`;
+            thread += `<i onclick="updatePostIdValueInPostModal(${postAndComment.post.post_id}, '${postAndComment.post.post_body}');" type="button" class="btn btn-primary btn-sm" data-toggle="modal" data-target="#UploadPostDialog">Update</i>`;
         }
         if(userIsAdmin() || userIsAuthor(postAndComment.post.user_id)){
             thread += `<i onclick="deletePost(${postAndComment.post.post_id}, ${postAndComment.post.user_id});" type="button" class="btn btn-danger btn-sm">Delete</i>`;
@@ -32,21 +33,21 @@ function displayPostsAndComments(postsAndComments){
         // if the post has at least one comment then loop through the array, again using map       
         if(postAndComment.comments != null){
             thread += `<ul class="comments-list reply-list">`;
-            const replies = postAndComment.comments.map(reply => {
+            postAndComment.comments.map(reply => {
                 thread += `<li>
                                 <!-- User's profile image -->
                                 <div class="comment-avatar"><img src="https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fcdn2.iconfinder.com%2Fdata%2Ficons%2Foffice-and-business-special-set-1%2F260%2F18-512.png&f=1&nofb=1" alt=""></div>
                                 <!-- Comment -->
                                 <div class="comment-box">
                                     <div class="comment-head">
-                                        <h6 class="comment-name"><a href="#">${reply.first_name}</a></h6>
+                                        <h6 class="comment-name"><a href="#">${reply.username}</a></h6>
                                         <span>${reply.upload_time.replace('T', ' ').substring(0, 19)}</span>`
             if(userIsAuthor(reply.user_id)) {
                 thread += `<i onclick="updatePostIdValueInCommentModal(${postAndComment.post.post_id}, ${reply.comment_id}, '${reply.comment_body}');" type="button" class="btn btn-primary btn-sm" data-toggle="modal" data-target="#UploadCommentDialog">Update</i>`;
             }
             if(userIsAdmin() || userIsAuthor(reply.user_id)){
                 thread += `<i onclick="deleteComment(${reply.comment_id}, ${reply.user_id});" type="button" class="btn btn-danger btn-sm">Delete</i>`;
-            } 
+            }
             thread += `</div>
                                     <div class="comment-content">
                                         ${reply.comment_body}
@@ -69,51 +70,6 @@ function displayPostsAndComments(postsAndComments){
     document.getElementById('comments-list').innerHTML = allPosts.join('');
 }
 
-function displaySinglePost(thread){
-    // console.log(thread);
-    let htmlThread = `<li>
-                        <div class="comment-main-level">
-                            <!-- Author's profile image -->
-                            <div class="comment-avatar"><img src="https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fcdn2.iconfinder.com%2Fdata%2Ficons%2Foffice-and-business-special-set-1%2F260%2F18-512.png&f=1&nofb=1" alt=""></div>
-                            <!-- Comment -->
-                            <div class="comment-box">
-                                <div class="comment-head">
-                                    <h6 class="comment-name by-author"><a href="#">${thread.post.first_name}</a></h6>
-                                    <span>${thread.post.upload_time.replace('T', ' ').substring(0, 19)}</span>
-                                </div>
-                                <div class="comment-content">
-                                    ${thread.post.post_body}
-                                </div>
-                            </div>
-                        </div>`;
-        // if the post has at least one comment then loop through the array, again using map       
-    if(thread.comments != null){
-        htmlThread += `<ul class="comments-list reply-list">`;
-        const replies = thread.comments.map(reply => {
-            htmlThread += `<li>
-                            <!-- User's profile image -->
-                            <div class="comment-avatar"><img src="https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fcdn2.iconfinder.com%2Fdata%2Ficons%2Foffice-and-business-special-set-1%2F260%2F18-512.png&f=1&nofb=1" alt=""></div>
-                            <!-- Comment -->
-                            <div class="comment-box">
-                                <div class="comment-head">
-                                    <h6 class="comment-name"><a href="http://creaticode.com/blog">${reply.first_name}</a></h6>
-                                    <span>${reply.upload_time.replace('T', ' ').substring(0, 19)}</span>
-                                </div>
-                                <div class="comment-content">
-                                    ${reply.comment_body}
-                                </div>
-                            </div>
-                        </li>`;
-        });
-        htmlThread += `</ul>`;
-    }
-    // if the post does not have any comments
-    else {
-        htmlThread += `</li></ul>`;
-    }
-    document.getElementById('comments-list').innerHTML = htmlThread;
-}
-
 // Get all posts and their comments and call on the display function
 async function loadPosts() {
     try {
@@ -130,8 +86,9 @@ async function loadPosts() {
 async function selectPost(id){
     try{
         // calling the function getDataAsync, implemented in fetch.js, that does a JS Fetch to the API endpoint
-        const post = await getDataAsync(`${BASE_URL}${id}`);
-        displaySinglePost(post);
+        const postsAndComments = await getDataAsync(`${BASE_URL}${id}`);
+        console.log(postsAndComments);
+        displayPostsAndComments(postsAndComments);
     }  // catch and display any errors to the console
     catch (err) {
       console.log(err);
@@ -278,11 +235,16 @@ function updatePostIdValueInCommentModal(postId, commentId, body) {
         if (commentId > 0) {
             document.getElementById("commentId").value = commentId + "";
         }
-        document.getElementById("commentBody").value = body + "";
+        // if the body of the reply is not empty, then convert the value to string just in case
+        if(body !== ""){
+            document.getElementById("commentBody").value = body + "";
+        }
+        console.log("value of body: " + body);
+
+        
 
         console.log("value of post id: " + postId);
         console.log("value of comment id: " + commentId);
-        console.log("value of body: " + body);
     }
 }
 

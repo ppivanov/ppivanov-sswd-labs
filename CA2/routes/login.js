@@ -3,6 +3,7 @@ const router = require('express').Router();
 const jwt = require('jsonwebtoken');
 const passport = require('passport');
 const bcrypt = require('bcryptjs')
+const validator = require('validator');
 
 // config package used to manage configuration options
 const config = require('config');
@@ -12,8 +13,6 @@ const keys = config.get('keys');
 
 const hashKey = 10;
 
-// Input validation package
-const validator = require('validator');
 
 // import the db connection
 const { sql, dbConnPoolPromise } = require('../database/db.js');
@@ -38,13 +37,12 @@ router.post('/auth', (req, res) => {
                 expires: Date.now() + (1000 * 60 * 30)
             };
 
-            //assign payload to req.user
             req.login(payload, { session: false }, (err) => {
                 if (err) {
                     console.log("Login failed login.js line 42");
                     res.status(400).send({err});
                 }
-                //generate a signed json web token and return it in the response
+                //generate a signed json web token
                 const token = jwt.sign(JSON.stringify(payload), keys.secret);
 
                 // add the token to a cookie and send
@@ -67,7 +65,7 @@ router.get('/logout', async (req, res) => {
         console.log("Logout successful");        
         return res.status(200).send({"message": "Logged out"});
     
-        // Catch and send errors  
+        // Catch and send any errors  
     } catch (err) {
         console.log("Error trying to logout");
         res.status(500)

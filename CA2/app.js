@@ -11,9 +11,10 @@ const PORT = 8000;
 // load passport middleware config
 require('./security/passportConfig');
 
-// app is a new instance of express (the web app framework)
+// get a new instance of express
 let app = express();
 
+// making the server send the static html page located in the api-client folder
 app.use(express.static('api-client'));
 
 // Application settings
@@ -25,28 +26,26 @@ app.use((req, res, next) => {
 
 app.use(cookieParser());
 
-// Allow app to support differnt body content types (using the bidyParser package)
+// Allow app to support different body content types (using the bodyParser package)
 app.use(bodyParser.text());
-app.use(bodyParser.json()); // support json encoded bodies
-app.use(bodyParser.urlencoded({ extended: true })); // support url encoded bodies
+// support json encoded bodies
+app.use(bodyParser.json()); 
+// support url encoded bodies
+app.use(bodyParser.urlencoded({ extended: true })); 
 
-// cors
-// https://www.npmjs.com/package/cors
-// https://codesquery.com/enable-cors-nodejs-express-app/
-// Simple Usage (Enable All CORS Requests)
+// Enable All CORS Requests
 app.use(cors({ credentials: true, origin: true }));
 app.options('*', cors()) // include before other routes
 
-/* Configure app Routes to handle requests from browser */
-// The home page
+/* Configure app routes to handle requests from browser */
+// The home/index/ page
 app.use('/', require('./routes/index'));
-
+// route for the register, login, logout functionality
+app.use('/login', require('./routes/login'));
+// handles routes to retrive details about user(s)
 app.use('/user', require('./routes/user'));
 
-app.use('/login', require('./routes/login'));
-
-// app.use("/product", require("./routes/product"));
-
+// if the requested route url is not handled,
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {
     var err = new Error('Not Found: '+ req.method + ":" + req.originalUrl);
@@ -55,12 +54,10 @@ app.use(function (req, res, next) {
 });
 
 // Start the HTTP server using HOST address and PORT consts defined above
-// Lssten for incoming connections
+// Listen for incoming connections
 var server = app.listen(PORT, HOST, function() {
     console.log(`Express server listening on http://${HOST}:${PORT}`);
 });
 
 // export this as a module, making the app object available when imported.
 module.exports = app;
-
-// TODO: Do documentation of endpoints and DB / requirements - see CA instructions

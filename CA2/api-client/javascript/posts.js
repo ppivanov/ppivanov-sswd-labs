@@ -122,7 +122,7 @@ async function addOrUpdatePost() {
         try {
             let json = "";
             // determine if this is an insert (POST) or update (PUT)
-            // update will include product id
+            // update will include post id
             if (postId > 0) {
                 url += `/${postId}/update-post`;
                 json = await postOrPutDataAsync(url, reqBody, 'PUT');
@@ -136,7 +136,7 @@ async function addOrUpdatePost() {
             document.getElementById('postId').value = "";
             document.getElementById('postBody').value = ""
 
-            // Load products
+            // redisplay all the posts
             loadPosts();
         // catch and log any errors
         } catch (err) {
@@ -170,7 +170,7 @@ async function addOrUpdateComment() {
         try {
             let json = "";
             // determine if this is an insert (POST) or update (PUT)
-            // update will include product id
+            // update will include reply id
             if (commentId > 0) {
                 url +=`/${postId}/update-reply/${commentId}`;
                 json = await postOrPutDataAsync(url, reqBody, 'PUT');
@@ -185,7 +185,7 @@ async function addOrUpdateComment() {
             document.getElementById('commentBody').value = ""
             document.getElementById('postIdForReply').value = ""
 
-            // Load products
+            // redisplay all the posts
             loadPosts();
         // catch and log any errors
         } catch (err) {
@@ -198,15 +198,22 @@ async function addOrUpdateComment() {
     }
 }
 
+// function to delete a post and its comments
 async function deletePost(postId, userId) {
     console.log(postId);
+    // only adminsitrators and the post's authors can delete a post
     if(userIsAdmin() || sessionStorage.userId == userId){
+        // popup to confirm deletion
         if(confirm("Do you want to permanently delete this post?")){
             const url = `${BASE_URL}posts/${postId}/delete-post`;
             try{
+                // call the async fucnction that uses DELETE method
                 const json = await deleteDataAsync(url);
 
+                // display another popup box that will notify the user that the post has been deleted
                 alert("Post deleted successfuly!");
+
+                // redisplay all the posts
                 loadPosts();
             } catch (err) {
                 console.log(err);
@@ -220,13 +227,16 @@ async function deletePost(postId, userId) {
 
 async function deleteComment(commentId, userId) {
     console.log(commentId);
+    // only and admin and the comment author can delete a comment
     if(userIsAdmin() || sessionStorage.userId == userId){
         if(confirm("Do you want to permanently delete this reply?")){
             const url = `${BASE_URL}posts/delete-reply/${commentId}`
             try{
                 const json = await deleteDataAsync(url);
 
+                // display another popup box that will notify the user that the comment has been removed
                 alert("Reply deleted successfuly!");
+                // redisplay all the posts
                 loadPosts();
             } catch (err) {
                 console.log(err);
@@ -247,19 +257,19 @@ function addPostButtonDisplay(){
     }
 }
 
+// Reusing a modal form, means that the default value of 0 for post and comment id of 0 must change when updating
+// This also puts the post/comment body in the text box for convenience
 function updatePostIdValueInCommentModal(postId, commentId, body) {
     if(userLoggedIn()){
 
         let commentDialog = document.getElementById("comment-modal-title");
-        if (commentId > 0) {
-            commentDialog.innerHTML = "Update comment";
-        } else {
-            commentDialog.innerHTML = "Upload comment";
-        }
 
         document.getElementById("postIdForReply").value = postId + "";
         if (commentId > 0) {
             document.getElementById("commentId").value = commentId + "";
+            commentDialog.innerHTML = "Update comment";
+        } else {
+            commentDialog.innerHTML = "Upload comment";
         }
         // if the body of the reply is not empty, then convert the value to string just in case
         if(body !== ""){
@@ -273,7 +283,7 @@ function updatePostIdValueInCommentModal(postId, commentId, body) {
         console.log("value of comment id: " + commentId);
     }
 }
-
+// does the same thing as the fucntion updatePostIdValueInCommentModal(), just modifies another modal
 function updatePostIdValueInPostModal(id, body) {
     if(userLoggedIn()){
 

@@ -41,7 +41,7 @@ async function postOrPutDataAsync(url, reqBody, reqMethod) {
     const request = {
         method: reqMethod,
         headers: HTTP_REQ_HEADERS,
-        credentials: 'include', // important
+        credentials: 'include',
         mode: 'cors',
         body: reqBody
         };
@@ -49,17 +49,11 @@ async function postOrPutDataAsync(url, reqBody, reqMethod) {
     // Try catch 
     try {
       // Call fetch and await the respose
-      // Initally returns a promise
       const response = await fetch(url, request);
   
       // As Resonse is dependant on fetch, await must also be used here
       const json = await response.json();
   
-      // Output result to console (for testing purposes) 
-      console.log(json);
-  
-      // Call function( passing he json result) to display data in HTML page
-      //displayData(json);
       return json;
   
       // catch and log any errors
@@ -76,17 +70,11 @@ async function postOrPutDataAsync(url, reqBody, reqMethod) {
     // Try catch 
     try {
         // Call fetch and await the respose
-        // Initally returns a promise
         const response = await fetch(url, DELETE_INIT);
     
         // As Resonse is dependant on fetch, await must also be used here
         const json = await response.json();
     
-        // Output result to console (for testing purposes) 
-        console.log(json);
-    
-        // Call function( passing he json result) to display data in HTML page
-        //displayData(json);
         return json;
     
         // catch and log any errors

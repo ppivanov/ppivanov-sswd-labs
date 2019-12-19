@@ -1,6 +1,6 @@
 // Passport Access Control Middlewares
 // LocalStrategy: finds username in the DB and verifies password
-// JWTStrategy: Extracts JWT from HTTP authorization header (bearer token) and verifies its signature
+// JWTStrategy: Extracts the toke from the jwt cookie and verifies its value.
 
 // Import dependencies
 const passport = require('passport');
@@ -19,8 +19,7 @@ const config = require('config');
 // Read secret key from config
 const keys = config.get('keys');
 
-// Function to get user
-// Consider putting this in a seperate user service
+// Function retrieve user from the database
 const getUser = async (username) => {
 
     try {
@@ -28,20 +27,20 @@ const getUser = async (username) => {
         // Get a DB connection and execute SQL
         const pool = await dbConnPoolPromise
         const result = await pool.request()
-            // set name parameter(s) in query
+            // set the required paramater in the query
             .input('email', sql.NVarChar, username)
             // execute query
             .query(SQL_GET_USER_BY_EMAIL);
 
         return (result.recordset[0]);
-    // Catch and send errors  
+    // Catch any problems and send with err code 500
     } catch (err) {
         res.status(500)
         res.send(err.message)
     }
 }
 
-// The local strategy middleware
+// Local strategy middleware
 passport.use(new LocalStrategy({
 
   // These values are passsed via HTTP 
@@ -51,7 +50,6 @@ passport.use(new LocalStrategy({
   try {
     const user = await getUser(username);
 
-    // this example uses plain text but better to use hashed passwords - 
     const passwordsMatch = await bcrypt.compare(password, user.password);
     if (passwordsMatch) {
       return done(null, user, { message: 'Logged In Successfully' });
@@ -63,9 +61,8 @@ passport.use(new LocalStrategy({
   }
 }));
 
-// JWT strategy middleware
+// JWT strategy
 passport.use(new JWTStrategy({
-    // jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
     jwtFromRequest: req => req.cookies.jwt,
     secretOrKey: keys.secret
   }, (jwtPayload, done) => {

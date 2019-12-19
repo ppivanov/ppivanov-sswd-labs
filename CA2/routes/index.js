@@ -129,7 +129,6 @@ router.post("/posts/upload/", passport.authenticate('jwt', { session: false}), a
 	if(!validator.isNumeric(userId)){
 		errors += "Invalid user id\n";
 	}
-	console.log("Passed User ID check");
 	
 	//escape text and potential bad characters using validator's 'escape' function
 	const postBody = validator.escape(req.body.post_body);
@@ -153,7 +152,7 @@ router.post("/posts/upload/", passport.authenticate('jwt', { session: false}), a
 		res.json({"errors": errors});
 		
 		return false;
-	} else { console.log("No errors"); }
+	}
 	//if no errors, then insert
 	try{
 		const pool = await dbConnPoolPromise

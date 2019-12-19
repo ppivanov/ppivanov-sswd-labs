@@ -8,7 +8,7 @@ const LocalStrategy = require('passport-local').Strategy;
 const passportJWT = require('passport-jwt');
 const ExtractJwt = require('passport-jwt').ExtractJwt;
 const JWTStrategy = passportJWT.Strategy;
-// const bcrypt = require('bcryptjs');
+const bcrypt = require('bcryptjs');
 
 // require the database connection
 const { sql, dbConnPoolPromise } = require('../database/db.js');
@@ -52,8 +52,8 @@ passport.use(new LocalStrategy({
     const user = await getUser(username);
 
     // this example uses plain text but better to use hashed passwords - 
-    // const passwordsMatch = await bcrypt.compare(password, user.Password);
-    if (user.password === password) {
+    const passwordsMatch = await bcrypt.compare(password, user.password);
+    if (passwordsMatch) {
       return done(null, user, { message: 'Logged In Successfully' });
     } else {
       return done(null, false, { message: 'Incorrect Username / Password' });

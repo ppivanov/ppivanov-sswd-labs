@@ -206,7 +206,7 @@ async function deletePost(postId, userId) {
             try{
                 const json = await deleteDataAsync(url);
 
-                // console.log("delete post response: " + json);
+                alert("Post deleted successfuly!");
                 loadPosts();
             } catch (err) {
                 console.log(err);
@@ -226,7 +226,7 @@ async function deleteComment(commentId, userId) {
             try{
                 const json = await deleteDataAsync(url);
 
-                // console.log("delete comment response: " + json);
+                alert("Reply deleted successfuly!");
                 loadPosts();
             } catch (err) {
                 console.log(err);

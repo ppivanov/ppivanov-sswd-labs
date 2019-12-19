@@ -26,8 +26,6 @@ const SQL_SELECT_ALL = 'SELECT * FROM dbo.Netizen for json path;';
 const SQL_SELECT_BY_ID = 'SELECT * FROM dbo.Netizen WHERE user_id = @id for json path, without_array_wrapper;';
 
 
-
-
 // GET listing of all users
 // Address http://server:port/user
 // returns JSON
@@ -92,16 +90,5 @@ router.get('/:id', passport.authenticate('jwt', { session: false}), async (req, 
     res.send(err.message)
   }
 });
-
-/*
-router.get('/test/test',
-passport.authenticate('jwt', { session: false}),
-(req, res) => {
-  console.log(`** protected: ${req.user}`);
-
-  res.status(200).send({ "message": req.user});
-});
-*/
-
 
 module.exports = router;

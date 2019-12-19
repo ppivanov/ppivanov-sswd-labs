@@ -10,6 +10,8 @@ const config = require('config');
 // Get the secret key from config
 const keys = config.get('keys');
 
+const hashKey = 10;
+
 // Input validation package
 const validator = require('validator');
 
@@ -21,12 +23,13 @@ router.post('/auth', (req, res) => {
     // use passport to athenticate (local middleware)
     passport.authenticate( 'local', {session: false}, (error, user, info) => {
             if (error || !user) {
-                console.log("Login failed login.js line 24");
                 res.status(400).json(
                     {message: info ? info.message : 'Login failed',
                         user: user   
                     }
                 );
+                console.log("Login failed login.js line 24");
+                return false;
             }
             //Define JWT contents and including the user id instead of email
             const payload = {
@@ -70,6 +73,59 @@ router.get('/logout', async (req, res) => {
         res.status(500)
         res.send(err.message)
     }
+});
+
+router.post("/register", async (req, res) => {
+	
+    // Query to insert a user into the DB
+    const SQL_INSERT_USER = "INSERT INTO dbo.Netizen (username, email, password, role) VALUES (@username, @email, @password, 'user'); SELECT username, email FROM dbo.Netizen WHERE user_id = SCOPE_IDENTITY();";
+
+	//validation - this string will hold any errors that occur.
+    let errors = "";
+    
+	// Asserting that the strings do not contain any bad characters
+	const username = validator.escape(req.body.username);
+	if(username === ""){
+		errors += "Invalid username\n";
+	}
+	
+	const email = req.body.email;
+	if(!validator.isEmail(email)){
+		errors += "Invalid email\n";
+    }
+    
+    let encryptedPass = "";
+    const pass = req.body.password;  
+    if (pass === "") {
+        errors += "Invalid password\n";
+    } else {
+        encryptedPass = await bcrypt.hash(pass, hashKey);
+    }
+
+	//if there are any errors send the details in the response
+	if(errors != ""){
+		res.json({"errors": errors});
+		
+		return false;
+	}
+	//if no errors, then insert
+	try{
+
+		const pool = await dbConnPoolPromise
+		const result = await pool.request()
+			//set name parameter(s) in query
+			.input("username", sql.NVarChar, username)
+			.input("email", sql.NVarChar, email)
+			.input("password", sql.NVarChar, encryptedPass)
+        .query(SQL_INSERT_USER);
+      
+        console.log("Registration complete!");
+		//if successful then return inserted post via http
+		res.json(result.recordset[0]);
+	} catch (err) {
+		res.status(500);
+		res.send(err.message)
+	}
 });
 
 module.exports = router;
